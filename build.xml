@@ -2,18 +2,22 @@
 <!-- 
 MotiveWave Custom Studies & Strategies Build Configuration
 
-This file supports building all custom studies and strategies together.
+Builds each study and strategy as a separate JAR file for individual deployment.
+
 If Ant is not available, use the build.sh script instead:
   ./build.sh
 
-Manual javac command:
-  mkdir -p bin/classes
-  javac -d bin/classes -cp "lib/mwave_sdk.jar" -encoding UTF-8 -source 11 -target 11 \
-    src/custom_studies/*.java src/custom_strategies/*.java
-  jar cvf bin/motivewave-indicators.jar -C bin/classes .
+Manual javac command (builds all into separate JARs):
+  for file in src/custom_studies/*.java src/custom_strategies/*.java; do
+    class_name=$(basename $file .java)
+    mkdir -p bin/.temp/$class_name
+    javac -d bin/.temp/$class_name -cp "lib/mwave_sdk.jar" -encoding UTF-8 $file
+    jar cvf bin/$class_name.jar -C bin/.temp/$class_name .
+  done
+  rm -rf bin/.temp
 -->
 <project name="MotiveWave-Indicators" default="build" basedir=".">
-    <description>Build all MotiveWave custom studies and strategies</description>
+    <description>Build individual JAR files for each MotiveWave study and strategy</description>
 
     <!-- Properties -->
     <property name="src.dir" value="src"/>
@@ -27,15 +31,25 @@ Manual javac command:
     <!-- Initialize directories -->
     <target name="init">
         <mkdir dir="${bin.dir}"/>
-        <mkdir dir="${bin.dir}/classes"/>
+        <delete dir="${bin.dir}/.build_temp"/>
+        <mkdir dir="${bin.dir}/.build_temp"/>
     </target>
 
-    <!-- Compile all studies and strategies -->
-    <target name="build" depends="init" description="Compile all studies and strategies">
-        <echo message="Compiling custom studies..."/>
+    <!-- Build a single study/strategy into its own JAR -->
+    <target name="build-indicator">
+        <fail unless="indicator.file" message="indicator.file property not set"/>
+        <fail unless="indicator.name" message="indicator.name property not set"/>
+        
+        <property name="indicator.classdir" value="${bin.dir}/.build_temp/${indicator.name}"/>
+        <property name="indicator.jar" value="${bin.dir}/${indicator.name}.jar"/>
+        
+        <mkdir dir="${indicator.classdir}"/>
+        
+        <echo message="Compiling ${indicator.name}..."/>
         <javac 
-            srcdir="${src.dir}/custom_studies" 
-            destdir="${bin.dir}/classes"
+            srcdir="${src.dir}" 
+            destdir="${indicator.classdir}"
+            includes="${indicator.file}"
             includeantruntime="false"
             encoding="${target.encoding}"
             source="${java.version}"
@@ -44,47 +58,55 @@ Manual javac command:
             debuglevel="lines,source">
             <classpath>
                 <fileset dir="${lib.dir}" includes="**/*.jar"/>
+                <dirset dir="${bin.dir}/.build_temp" includes="*"/>
             </classpath>
         </javac>
         
-        <echo message="Compiling custom strategies..."/>
-        <javac 
-            srcdir="${src.dir}/custom_strategies" 
-            destdir="${bin.dir}/classes"
-            includeantruntime="false"
-            encoding="${target.encoding}"
-            source="${java.version}"
-            target="${java.version}"
-            debug="true"
-            debuglevel="lines,source">
-            <classpath>
-                <dirset dir="${bin.dir}" includes="classes"/>
-                <fileset dir="${lib.dir}" includes="**/*.jar"/>
-            </classpath>
-        </javac>
-    </target>
-
-    <!-- Package into JAR -->
-    <target name="jar" depends="build" description="Package all indicators into JAR">
-        <jar destfile="${bin.dir}/motivewave-indicators.jar" basedir="${bin.dir}/classes">
+        <echo message="Creating ${indicator.name}.jar..."/>
+        <jar destfile="${indicator.jar}" basedir="${indicator.classdir}">
             <manifest>
-                <attribute name="Implementation-Title" value="Custom MotiveWave Studies & Strategies"/>
+                <attribute name="Implementation-Title" value="MotiveWave ${indicator.name}"/>
                 <attribute name="Implementation-Version" value="1.0"/>
             </manifest>
         </jar>
+        <echo message="✓ ${indicator.name}.jar created"/>
+    </target>
+
+    <!-- Build all studies -->
+    <target name="build-studies" depends="init">
+        <echo message="Building studies..."/>
+        <antcall target="build-indicator">
+            <param name="indicator.file" value="custom_studies/SegmentedInitialBalance.java"/>
+            <param name="indicator.name" value="SegmentedInitialBalance"/>
+        </antcall>
+    </target>
+
+    <!-- Build all strategies -->
+    <target name="build-strategies" depends="init">
+        <echo message="Building strategies..."/>
+        <antcall target="build-indicator">
+            <param name="indicator.file" value="custom_strategies/BracketAverager.java"/>
+            <param name="indicator.name" value="BracketAverager"/>
+        </antcall>
+    </target>
+
+    <!-- Main build target -->
+    <target name="build" depends="build-studies, build-strategies" description="Build all indicators and strategies as separate JARs">
+        <echo message="Build complete!"/>
+        <exec executable="ls">
+            <arg line="-1 ${bin.dir}/*.jar"/>
+        </exec>
     </target>
 
     <!-- Clean -->
     <target name="clean" description="Clean build artifacts">
-        <delete dir="${bin.dir}/classes"/>
-        <delete file="${bin.dir}/motivewave-indicators.jar"/>
-    </target>
-
-    <!-- Clean all -->
-    <target name="clean-all" depends="clean" description="Clean all build artifacts">
-        <delete dir="${bin.dir}"/>
+        <delete dir="${bin.dir}/.build_temp"/>
+        <delete>
+            <fileset dir="${bin.dir}" includes="*.jar"/>
+        </delete>
     </target>
 
 </project>
+
 
 

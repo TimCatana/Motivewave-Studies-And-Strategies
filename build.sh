@@ -1,62 +1,79 @@
 #!/bin/bash
 # MotiveWave Custom Indicators - Build Script
-# This script compiles all studies and strategies and packages them into a JAR file
+# Compiles each study and strategy into separate JAR files for individual deployment
 
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SRC_DIR="$SCRIPT_DIR/src"
 BIN_DIR="$SCRIPT_DIR/bin"
-CLASSES_DIR="$BIN_DIR/classes"
 LIB_DIR="$SCRIPT_DIR/lib"
-JAR_FILE="$BIN_DIR/motivewave-indicators.jar"
+TEMP_DIR="$BIN_DIR/.build_temp"
 
 # Colors for output
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
 echo -e "${BLUE}MotiveWave Custom Studies & Strategies Build${NC}"
 echo "=============================================="
 
-# Create output directories
-mkdir -p "$CLASSES_DIR"
+# Create output and temp directories
+mkdir -p "$BIN_DIR"
+mkdir -p "$TEMP_DIR"
 
-# Compile all studies and strategies
-echo -e "${BLUE}Compiling custom studies...${NC}"
-javac -d "$CLASSES_DIR" \
-    -cp "$LIB_DIR/mwave_sdk.jar" \
-    -encoding UTF-8 \
-    -source 11 -target 11 \
-    "$SRC_DIR"/custom_studies/*.java
+# Function to build a single indicator/strategy
+build_indicator() {
+    local java_file="$1"
+    local class_name="${java_file##*/}"
+    class_name="${class_name%.java}"
+    local classes_dir="$TEMP_DIR/$class_name"
+    local jar_file="$BIN_DIR/$class_name.jar"
+    
+    mkdir -p "$classes_dir"
+    
+    echo -e "${BLUE}Compiling $class_name...${NC}"
+    javac -d "$classes_dir" \
+        -cp "$LIB_DIR/mwave_sdk.jar" \
+        -encoding UTF-8 \
+        -source 11 -target 11 \
+        "$java_file" 2>/dev/null
+    
+    echo -e "${BLUE}Creating $class_name.jar...${NC}"
+    jar cvf "$jar_file" -C "$classes_dir" . > /dev/null 2>&1
+    
+    echo -e "${GREEN}✓ $class_name.jar created${NC}"
+}
 
-echo -e "${GREEN}✓ Studies compiled${NC}"
+# Build all studies
+echo ""
+echo -e "${YELLOW}Building Studies:${NC}"
+for java_file in "$SRC_DIR"/custom_studies/*.java; do
+    if [ -f "$java_file" ]; then
+        build_indicator "$java_file"
+    fi
+done
 
-echo -e "${BLUE}Compiling custom strategies...${NC}"
-javac -d "$CLASSES_DIR" \
-    -cp "$LIB_DIR/mwave_sdk.jar:$CLASSES_DIR" \
-    -encoding UTF-8 \
-    -source 11 -target 11 \
-    "$SRC_DIR"/custom_strategies/*.java
+# Build all strategies
+echo ""
+echo -e "${YELLOW}Building Strategies:${NC}"
+for java_file in "$SRC_DIR"/custom_strategies/*.java; do
+    if [ -f "$java_file" ]; then
+        build_indicator "$java_file"
+    fi
+done
 
-echo -e "${GREEN}✓ Strategies compiled${NC}"
+# Clean up temp directory
+rm -rf "$TEMP_DIR"
 
-# Package into JAR
-echo -e "${BLUE}Creating JAR package...${NC}"
-jar cvf "$JAR_FILE" -C "$CLASSES_DIR" . > /dev/null 2>&1
-
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ JAR created successfully: $JAR_FILE${NC}"
-else
-    echo "✗ JAR creation failed"
-    exit 1
-fi
-
+# List all JAR files
 echo ""
 echo -e "${GREEN}Build Complete!${NC}"
-echo "JAR file: $JAR_FILE"
+echo -e "${YELLOW}Output JAR files:${NC}"
+ls -1 "$BIN_DIR"/*.jar 2>/dev/null | xargs -n1 basename | sed 's/^/  ✓ /'
+
 echo ""
-echo "Included:"
-ls -1 "$CLASSES_DIR"/custom_studies/*.class 2>/dev/null | xargs -n1 basename | sed 's/\.class$//' | sed 's/^/  • /'
-ls -1 "$CLASSES_DIR"/custom_strategies/*.class 2>/dev/null | xargs -n1 basename | sed 's/\.class$//' | sed 's/^/  • /'
+echo "Deploy: Copy any .jar file to MotiveWave's indicators directory"
+
 

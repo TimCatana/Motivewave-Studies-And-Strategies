@@ -12,7 +12,8 @@ motivewave-indicators/
 │   └── custom_strategies/                   ← Automated trading strategies
 │       └── BracketAverager.java
 ├── bin/
-│   └── motivewave-indicators.jar            ← Ready-to-use JAR
+│   ├── SegmentedInitialBalance.jar          ← Deploy individually
+│   └── BracketAverager.jar                  ← Deploy individually
 ├── lib/
 │   └── mwave_sdk.jar                        ← MotiveWave SDK
 ├── build.sh                                 ← Bash build script (recommended)
@@ -58,32 +59,40 @@ motivewave-indicators/
 ./build.sh
 ```
 
-This will compile all studies and strategies into a single JAR file.
+This compiles each study and strategy into its **own JAR file** in `bin/`:
+- `SegmentedInitialBalance.jar`
+- `BracketAverager.jar`
 
 ### Manual Build with javac
 ```bash
-mkdir -p bin/classes
-javac -d bin/classes -cp "lib/mwave_sdk.jar" -encoding UTF-8 -source 11 -target 11 \
-  src/custom_studies/*.java src/custom_strategies/*.java
-jar cvf bin/motivewave-indicators.jar -C bin/classes .
+for file in src/custom_studies/*.java src/custom_strategies/*.java; do
+  class_name=$(basename $file .java)
+  mkdir -p bin/.temp/$class_name
+  javac -d bin/.temp/$class_name -cp "lib/mwave_sdk.jar" -encoding UTF-8 $file
+  jar cvf bin/$class_name.jar -C bin/.temp/$class_name .
+done
+rm -rf bin/.temp
 ```
 
 ### Build with Ant (if installed)
 ```bash
-ant build    # Compile studies and strategies
-ant jar      # Compile and package into JAR
-ant clean    # Remove build artifacts
+ant build      # Compile studies and strategies into separate JARs
+ant clean      # Remove all JAR files
 ```
 
 ## Deployment to MotiveWave
 
-1. Build the project: `./build.sh`
-2. Copy `bin/motivewave-indicators.jar` to MotiveWave's user indicators directory
-3. Restart MotiveWave
-4. Access studies in: **Indicators** menu
-5. Access strategies in: **Strategies** panel
+Each study/strategy is its **own JAR file** — deploy only what you need:
 
-> **Each study/strategy is loaded individually** — You can enable/disable them independently in MotiveWave's UI.
+1. Build the project: `./build.sh`
+2. Copy **individual JAR files** to MotiveWave's indicators directory:
+   - Copy `SegmentedInitialBalance.jar` → MotiveWave indicators
+   - Copy `BracketAverager.jar` → MotiveWave indicators
+   - Or copy both!
+3. Restart MotiveWave
+4. Enable indicators/strategies in MotiveWave's UI
+
+> **Flexibility**: You can load any combination of indicators and strategies independently.
 
 ## Adding New Studies or Strategies
 
@@ -93,6 +102,7 @@ ant clean    # Remove build artifacts
 3. Implement required methods: `initialize()`, `calculate()`
 4. Use `@StudyHeader` annotation (set `strategy=false` or omit)
 5. Run: `./build.sh`
+6. A new `MyStudy.jar` will be created in `bin/`
 
 ### Create a New Strategy
 1. Create a new file in `src/custom_strategies/MyStrategy.java`
@@ -101,6 +111,9 @@ ant clean    # Remove build artifacts
 4. Use `@StudyHeader` annotation with `strategy=true`
 5. Implement: `onActivate()`, `onDeactivate()`, `onOrderFilled()`, etc.
 6. Run: `./build.sh`
+7. A new `MyStrategy.jar` will be created in `bin/`
+
+**Each new file automatically gets its own JAR file** — Deploy only the ones you need!
 
 ## SDK Documentation
 
