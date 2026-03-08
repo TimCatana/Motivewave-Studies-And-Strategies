@@ -34,9 +34,8 @@ target/
 .gradle/
 build/
 
-# SDK Documentation (keep sample MotiveWave studies)
-sample/*/sdk_api_doc/
-sample/sdk_api_doc/
+# Sample folder
+sample/
 
 # Misc
 .env
