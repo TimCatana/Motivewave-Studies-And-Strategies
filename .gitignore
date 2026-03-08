@@ -3,7 +3,9 @@ bin/classes/
 *.class
 
 # Build outputs
-*.jar
+bin/**/*.jar
+
+# Keep dependencies
 
 # IDE/Editor files
 .vscode/
