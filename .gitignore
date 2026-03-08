@@ -1,11 +1,9 @@
 # Compiled Java classes
-bin/classes/
 *.class
+bin/classes/
 
 # Build outputs
 bin/**/*.jar
-
-# Keep dependencies
 
 # IDE/Editor files
 .vscode/
@@ -31,12 +29,12 @@ Thumbs.db
 .Trashes
 ehthumbs.db
 
-# Maven/Gradle (if used in future)
+# Build systems
 target/
 .gradle/
 build/
 
-# Sample folder
+# Project-specific
 sample/
 
 # Misc
