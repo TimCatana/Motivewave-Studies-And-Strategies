@@ -1,0 +1,40 @@
+# Compiled Java classes
+bin/classes/
+*.class
+
+# Build outputs
+*.jar
+
+# IDE/Editor files
+.vscode/
+.idea/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+
+# OS files
+.DS_Store
+Thumbs.db
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+
+# Maven/Gradle (if used in future)
+target/
+.gradle/
+build/
+
+# Misc
+.env
+*.log
+*.tmp

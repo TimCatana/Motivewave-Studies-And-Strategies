@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+MotiveWave Custom Studies & Strategies Build Configuration
+
+This file supports building all custom studies and strategies together.
+If Ant is not available, use the build.sh script instead:
+  ./build.sh
+
+Manual javac command:
+  mkdir -p bin/classes
+  javac -d bin/classes -cp "lib/mwave_sdk.jar" -encoding UTF-8 -source 11 -target 11 \
+    src/custom_studies/*.java src/custom_strategies/*.java
+  jar cvf bin/motivewave-indicators.jar -C bin/classes .
+-->
+<project name="MotiveWave-Indicators" default="build" basedir=".">
+    <description>Build all MotiveWave custom studies and strategies</description>
+
+    <!-- Properties -->
+    <property name="src.dir" value="src"/>
+    <property name="bin.dir" value="bin"/>
+    <property name="lib.dir" value="lib"/>
+    
+    <!-- Java version -->
+    <property name="java.version" value="11"/>
+    <property name="target.encoding" value="UTF-8"/>
+
+    <!-- Initialize directories -->
+    <target name="init">
+        <mkdir dir="${bin.dir}"/>
+        <mkdir dir="${bin.dir}/classes"/>
+    </target>
+
+    <!-- Compile all studies and strategies -->
+    <target name="build" depends="init" description="Compile all studies and strategies">
+        <echo message="Compiling custom studies..."/>
+        <javac 
+            srcdir="${src.dir}/custom_studies" 
+            destdir="${bin.dir}/classes"
+            includeantruntime="false"
+            encoding="${target.encoding}"
+            source="${java.version}"
+            target="${java.version}"
+            debug="true"
+            debuglevel="lines,source">
+            <classpath>
+                <fileset dir="${lib.dir}" includes="**/*.jar"/>
+            </classpath>
+        </javac>
+        
+        <echo message="Compiling custom strategies..."/>
+        <javac 
+            srcdir="${src.dir}/custom_strategies" 
+            destdir="${bin.dir}/classes"
+            includeantruntime="false"
+            encoding="${target.encoding}"
+            source="${java.version}"
+            target="${java.version}"
+            debug="true"
+            debuglevel="lines,source">
+            <classpath>
+                <dirset dir="${bin.dir}" includes="classes"/>
+                <fileset dir="${lib.dir}" includes="**/*.jar"/>
+            </classpath>
+        </javac>
+    </target>
+
+    <!-- Package into JAR -->
+    <target name="jar" depends="build" description="Package all indicators into JAR">
+        <jar destfile="${bin.dir}/motivewave-indicators.jar" basedir="${bin.dir}/classes">
+            <manifest>
+                <attribute name="Implementation-Title" value="Custom MotiveWave Studies & Strategies"/>
+                <attribute name="Implementation-Version" value="1.0"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- Clean -->
+    <target name="clean" description="Clean build artifacts">
+        <delete dir="${bin.dir}/classes"/>
+        <delete file="${bin.dir}/motivewave-indicators.jar"/>
+    </target>
+
+    <!-- Clean all -->
+    <target name="clean-all" depends="clean" description="Clean all build artifacts">
+        <delete dir="${bin.dir}"/>
+    </target>
+
+</project>
+
+

@@ -1,0 +1,27 @@
+# Ensure consistent line endings across platforms
+* text=auto
+
+# Java files
+*.java text eol=lf
+*.class binary
+
+# Build files
+*.jar binary
+*.class binary
+
+# Shell scripts
+*.sh text eol=lf
+*.bash text eol=lf
+
+# XML/Config
+*.xml text eol=lf
+*.properties text eol=lf
+*.gradle text eol=lf
+
+# Markdown
+*.md text eol=lf
+README.md text eol=lf
+
+# Windows files
+*.bat text eol=crlf
+*.cmd text eol=crlf
