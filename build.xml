@@ -79,6 +79,10 @@ Manual javac command (builds all into separate JARs):
             <param name="indicator.file" value="custom_studies/SegmentedInitialBalance.java"/>
             <param name="indicator.name" value="SegmentedInitialBalance"/>
         </antcall>
+        <antcall target="build-indicator">
+            <param name="indicator.file" value="custom_studies/VwapWaveAdaptiveRSI.java"/>
+            <param name="indicator.name" value="VwapWaveAdaptiveRSI"/>
+        </antcall>
     </target>
 
     <!-- Build all strategies -->

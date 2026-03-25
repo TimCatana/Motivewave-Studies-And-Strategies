@@ -12,11 +12,13 @@ https://www.motivewave.com/sdk.htm
 motivewave-indicators/
 ├── src/
 │   ├── custom_studies/                      ← Chart analysis indicators
-│   │   └── SegmentedInitialBalance.java
+│   │   ├── SegmentedInitialBalance.java
+│   │   └── SessionDayWeekHighLow.java
 │   └── custom_strategies/                   ← Automated trading strategies
 │       └── BracketAverager.java
 ├── bin/
 │   ├── SegmentedInitialBalance.jar          ← Deploy individually
+│   ├── SessionDayWeekHighLow.jar            ← Deploy individually
 │   └── BracketAverager.jar                  ← Deploy individually
 ├── lib/
 │   └── mwave_sdk.jar                        ← MotiveWave SDK
@@ -65,6 +67,7 @@ motivewave-indicators/
 
 This compiles each study and strategy into its **own JAR file** in `bin/`:
 - `SegmentedInitialBalance.jar`
+- `SessionDayWeekHighLow.jar`
 - `BracketAverager.jar`
 
 ### Manual Build with javac
@@ -91,8 +94,9 @@ Each study/strategy is its **own JAR file** — deploy only what you need:
 1. Build the project: `./build.sh`
 2. Copy **individual JAR files** to MotiveWave's indicators directory:
    - Copy `SegmentedInitialBalance.jar` → MotiveWave indicators
+  - Copy `SessionDayWeekHighLow.jar` → MotiveWave indicators
    - Copy `BracketAverager.jar` → MotiveWave indicators
-   - Or copy both!
+  - Or copy any combination you want enabled
 3. Restart MotiveWave
 4. Enable indicators/strategies in MotiveWave's UI
 
@@ -136,6 +140,18 @@ Displays Initial Balance with historical tracking and extension levels.
   - Timezone
   - Max historical prints
   - Show 1.5x and 2.0x extensions
+
+### SessionDayWeekHighLow (Study)
+Displays Asia/London/New York session highs/lows plus current/previous day and week highs/lows.
+- **Namespace**: `custom`
+- **ID**: `SESSION_DAY_WEEK_HL`
+- **Features**:
+  - Session windows configurable in HHMM format
+  - Timezone-aware session/day/week tracking
+  - Ray-style lines anchored to each level's most recent extremum bar
+  - Optional right-edge labels with configurable tick offset
+  - Per-level visibility toggles for all 20 levels
+  - Per-level line styling via MotiveWave path settings
 
 ### BracketAverager (Strategy)
 Automatically manages bracket orders when averaging into positions.
